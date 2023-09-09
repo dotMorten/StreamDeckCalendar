@@ -1,0 +1,39 @@
+{
+  "Actions": [
+    {
+      "Icon": "Images/calendarIcon",
+      "Name": "Calendar",
+      "States": [
+        {
+          "Image": "Images/calendarIcon",
+          "TitleAlignment": "middle",
+          "FontSize": "12"
+        }
+      ],
+      "SupportedInMultiActions": false,
+      "Tooltip": "Displays the next calendar item from the Windows Mail & Calendar app",
+      "UUID": "elgato.plugins.windowscalendar.calendaraction",
+      "PropertyInspectorPath": "PropertyInspector/PluginActionPI.html"
+    }
+  ],
+  "Author": "Morten Nielsen",
+  "Name": "Elgato.Plugins.WindowsCalendar",
+  "Description": "Displays the next calender item from your Windows Mail & Calendar app",
+  "Icon": "Images/calendarIcon",
+  "URL": "https://xaml.dev",
+  "Version": "1.0",
+  "CodePath": "Elgato.Plugins.WindowsCalendar",
+  "Category": "Windows Calendar",
+  "CategoryIcon": "Images/calendarIcon",
+  "UUID": "elgato.plugins.windowscalendar",
+  "OS": [
+    {
+      "Platform": "windows",
+      "MinimumVersion": "10"
+    }
+  ],
+  "SDKVersion": 2,
+  "Software": {
+    "MinimumVersion": "4.9"
+  }
+}
