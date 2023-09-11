@@ -94,6 +94,13 @@ namespace Elgato.Plugins.WindowsCalendar
                 events = new List<Appointment>(ap);
 
             var next = GetNextAppointment();
+            if(next.StartTime < DateTimeOffset.Now && // Has started
+                next.StartTime + next.Duration < DateTimeOffset.UtcNow + TimeSpan.FromMinutes(Math.Min(15, next.Duration.TotalMinutes / 2)) // Is almost over
+              )
+            {
+                // If this appointment is almost over, find the next one
+                next = GetNextAppointment(true);
+            }
             next = await store.GetAppointmentInstanceAsync(next.LocalId, next.StartTime); // Ensures all the meeting properties are fully loaded 
             if (next != null)
             {
@@ -236,9 +243,9 @@ namespace Elgato.Plugins.WindowsCalendar
             RefreshIcon();
         }
 
-        private Appointment GetNextAppointment()
+        private Appointment GetNextAppointment(bool notStarted = false)
         {
-            Appointment[] nextAppointments = GetNextAppointments(1, false);
+            Appointment[] nextAppointments = GetNextAppointments(1, false, notStarted);
             if (nextAppointments.Length > 0)
             {
                 return nextAppointments[0];
@@ -246,13 +253,13 @@ namespace Elgato.Plugins.WindowsCalendar
             return null;
         }
 
-        private Appointment[] GetNextAppointments(int count, bool includeAllDay = true)
+        private Appointment[] GetNextAppointments(int count, bool includeAllDay = true, bool notStarted = false)
         {
             lock (eventslock)
             {
                 if (events != null)
                 {
-                    return events.OrderBy(e => e.StartTime).Where(e => e.StartTime + e.Duration > DateTimeOffset.UtcNow && !e.IsCanceledMeeting && (!e.AllDay || includeAllDay) && e.Subject != "OoO").Take(count).ToArray();
+                    return events.OrderBy(e => e.StartTime).Where(e => e.StartTime + (notStarted ? TimeSpan.Zero : e.Duration) > DateTimeOffset.UtcNow && !e.IsCanceledMeeting && (!e.AllDay || includeAllDay) && e.BusyStatus != AppointmentBusyStatus.OutOfOffice).Take(count).ToArray();
                 }
             }
             return new Appointment[0];
