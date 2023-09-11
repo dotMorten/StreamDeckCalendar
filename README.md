@@ -12,4 +12,4 @@ Clicking the button will open the calendar details, but if there's less than 5 m
 No configuration needed, except adding your calendar accounts to the Windows Mail & Calendar app.
 
 # NOTE
-The new Microsoft Outlook application that in the future will replace the future Mail & Calendar app will _not_ work, since it is currently not using the Windows APIs to manage calendars.
+The new Microsoft Outlook application that in the future will replace the Mail & Calendar app will _not_ work, since it is currently not using the Windows APIs to manage calendars.
