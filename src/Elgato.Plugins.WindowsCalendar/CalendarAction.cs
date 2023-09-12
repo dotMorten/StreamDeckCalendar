@@ -35,17 +35,20 @@ namespace Elgato.Plugins.WindowsCalendar
             public static PluginSettings CreateDefaultSettings()
             {
                 PluginSettings instance = new PluginSettings();
-                instance.OutputFileName = String.Empty;
-                instance.InputString = String.Empty;
+                instance.OutOfOffice = false;
+                instance.AllDay = false;
+                instance.Free = false;
                 return instance;
             }
 
-            [FilenameProperty]
-            [JsonProperty(PropertyName = "outputFileName")]
-            public string OutputFileName { get; set; }
+            [JsonProperty(PropertyName = "out_of_office")]
+            public bool OutOfOffice { get; set; }
 
-            [JsonProperty(PropertyName = "inputString")]
-            public string InputString { get; set; }
+            [JsonProperty(PropertyName = "free")]
+            public bool Free { get; set; }
+
+            [JsonProperty(PropertyName = "all_day")]
+            public bool AllDay { get; set; }
         }
 
         #region Private Members
@@ -62,7 +65,7 @@ namespace Elgato.Plugins.WindowsCalendar
 
         public CalendarAction(SDConnection connection, InitialPayload payload) : base(connection, payload)
         {
-            //System.Diagnostics.Debugger.Launch();
+            // System.Diagnostics.Debugger.Launch();
             if (payload.Settings == null || payload.Settings.Count == 0)
             {
                 this.settings = PluginSettings.CreateDefaultSettings();
@@ -74,6 +77,7 @@ namespace Elgato.Plugins.WindowsCalendar
             }
             _ = LoadCalendar();
         }
+
         private async Task LoadCalendar()
         {
             store = await Windows.ApplicationModel.Appointments.AppointmentManager.RequestStoreAsync(Windows.ApplicationModel.Appointments.AppointmentStoreAccessType.AllCalendarsReadOnly);
@@ -94,7 +98,7 @@ namespace Elgato.Plugins.WindowsCalendar
                 events = new List<Appointment>(ap);
 
             var next = GetNextAppointment();
-            if(next.StartTime < DateTimeOffset.Now && // Has started
+            if (next.StartTime < DateTimeOffset.Now && // Has started
                 next.StartTime + next.Duration < DateTimeOffset.UtcNow + TimeSpan.FromMinutes(Math.Min(15, next.Duration.TotalMinutes / 2)) // Is almost over
               )
             {
@@ -245,7 +249,7 @@ namespace Elgato.Plugins.WindowsCalendar
 
         private Appointment GetNextAppointment(bool notStarted = false)
         {
-            Appointment[] nextAppointments = GetNextAppointments(1, false, notStarted);
+            Appointment[] nextAppointments = GetNextAppointments(1, notStarted);
             if (nextAppointments.Length > 0)
             {
                 return nextAppointments[0];
@@ -253,13 +257,27 @@ namespace Elgato.Plugins.WindowsCalendar
             return null;
         }
 
-        private Appointment[] GetNextAppointments(int count, bool includeAllDay = true, bool notStarted = false)
+        private Appointment[] GetNextAppointments(int count, bool notStarted = false)
         {
             lock (eventslock)
             {
                 if (events != null)
                 {
-                    return events.OrderBy(e => e.StartTime).Where(e => e.StartTime + (notStarted ? TimeSpan.Zero : e.Duration) > DateTimeOffset.UtcNow && !e.IsCanceledMeeting && (!e.AllDay || includeAllDay) && e.BusyStatus != AppointmentBusyStatus.OutOfOffice).Take(count).ToArray();
+                    IEnumerable<Appointment> candidates = events;
+                    candidates = candidates.Where(e => !e.IsCanceledMeeting);
+                    if (!settings.OutOfOffice)
+                        candidates = candidates.Where(e => e.BusyStatus != AppointmentBusyStatus.OutOfOffice);
+                    if (!settings.Free)
+                        candidates = candidates.Where(e => e.BusyStatus != AppointmentBusyStatus.Free);
+                    if (!settings.AllDay)
+                        candidates = candidates.Where(e => !e.AllDay);
+                    
+                    if (notStarted)
+                        candidates = candidates.Where(e => e.StartTime > DateTimeOffset.UtcNow); // Hasn't begun
+                    else
+                        candidates = candidates.Where(e => e.StartTime + e.Duration >= DateTimeOffset.UtcNow); // Hasn't ended
+
+                    return candidates.OrderBy(e => e.StartTime).Take(count).ToArray();
                 }
             }
             return new Appointment[0];
@@ -297,6 +315,7 @@ namespace Elgato.Plugins.WindowsCalendar
         {
             Tools.AutoPopulateSettings(settings, payload.Settings);
             SaveSettings();
+            _ = LoadNextAppointments();
         }
 
         public override void ReceivedGlobalSettings(ReceivedGlobalSettingsPayload payload) { }
