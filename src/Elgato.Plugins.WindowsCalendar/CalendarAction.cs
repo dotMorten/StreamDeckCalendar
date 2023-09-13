@@ -65,7 +65,7 @@ namespace Elgato.Plugins.WindowsCalendar
 
         public CalendarAction(SDConnection connection, InitialPayload payload) : base(connection, payload)
         {
-             System.Diagnostics.Debugger.Launch();
+            // System.Diagnostics.Debugger.Launch();
             if (payload.Settings == null || payload.Settings.Count == 0)
             {
                 this.settings = PluginSettings.CreateDefaultSettings();
