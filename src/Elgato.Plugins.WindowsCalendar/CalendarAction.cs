@@ -65,7 +65,7 @@ namespace Elgato.Plugins.WindowsCalendar
 
         public CalendarAction(SDConnection connection, InitialPayload payload) : base(connection, payload)
         {
-            // System.Diagnostics.Debugger.Launch();
+             System.Diagnostics.Debugger.Launch();
             if (payload.Settings == null || payload.Settings.Count == 0)
             {
                 this.settings = PluginSettings.CreateDefaultSettings();
@@ -99,11 +99,12 @@ namespace Elgato.Plugins.WindowsCalendar
 
             var next = GetNextAppointment();
             if (next.StartTime < DateTimeOffset.Now && // Has started
-                next.StartTime + next.Duration < DateTimeOffset.UtcNow + TimeSpan.FromMinutes(Math.Min(15, next.Duration.TotalMinutes / 2)) // Is almost over
-              )
+                IsAppointmentAlmostOver(next))
             {
-                // If this appointment is almost over, find the next one
-                next = GetNextAppointment(true);
+                // If this appointment is almost over, find the next one and show that if it's starting soon
+                var upnext = GetNextAppointment(true);
+                if (next.StartTime + next.Duration >= upnext.StartTime - TimeSpan.FromMinutes(15))
+                    next = upnext;
             }
             next = await store.GetAppointmentInstanceAsync(next.LocalId, next.StartTime); // Ensures all the meeting properties are fully loaded 
             if (next != null)
@@ -329,7 +330,16 @@ namespace Elgato.Plugins.WindowsCalendar
 
         public override void OnTick()
         {
+            if(nextAppointment != null && IsAppointmentAlmostOver(nextAppointment))
+            {
+                _ = LoadNextAppointments();
+            }
             // Required to implement - no action needed
+        }
+
+        private static bool IsAppointmentAlmostOver(Appointment appointment)
+        {
+            return appointment.StartTime + appointment.Duration < DateTimeOffset.UtcNow + TimeSpan.FromMinutes(Math.Min(15, appointment.Duration.TotalMinutes / 2));
         }
 
         #endregion
