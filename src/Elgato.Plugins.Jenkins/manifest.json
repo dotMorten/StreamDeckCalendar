@@ -1,0 +1,39 @@
+{
+  "Actions": [
+    {
+      "Icon": "Images/jenkins_logo",
+      "Name": "Jenkins",
+      "States": [
+        {
+          "Image": "Images/jenkins_logo",
+          "TitleAlignment": "middle",
+          "FontSize": "12"
+        }
+      ],
+      "SupportedInMultiActions": false,
+      "Tooltip": "Displays Jenkins status",
+      "UUID": "elgato.plugins.jenkins.jenkinsaction",
+      "PropertyInspectorPath": "PropertyInspector/PluginActionPI.html"
+    }
+  ],
+  "Author": "Morten Nielsen",
+  "Name": "Elgato.Plugins.Jenkins",
+  "Description": "Displays Jenkins status",
+  "Icon": "Images/jenkins_logo",
+  "URL": "https://xaml.dev",
+  "Version": "1.0",
+  "CodePath": "Elgato.Plugins.Jenkins",
+  "Category": "Jenkins",
+  "CategoryIcon": "Images/jenkins_logo",
+  "UUID": "elgato.plugins.jenkins",
+  "OS": [
+    {
+      "Platform": "windows",
+      "MinimumVersion": "10"
+    }
+  ],
+  "SDKVersion": 2,
+  "Software": {
+    "MinimumVersion": "4.9"
+  }
+}
